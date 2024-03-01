@@ -5,8 +5,10 @@ package apcupsdexporter
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
+
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 
 	"github.com/mdlayher/apcupsd"
 	"github.com/prometheus/client_golang/prometheus"
@@ -27,6 +29,9 @@ const (
 // with Prometheus.
 type Exporter struct {
 	clientFn ClientFunc
+	logger   log.Logger
+
+	Up *prometheus.Desc
 }
 
 var _ prometheus.Collector = &Exporter{}
@@ -38,9 +43,16 @@ type ClientFunc func(ctx context.Context) (*apcupsd.Client, error)
 
 // New creates a new Exporter which collects metrics by creating a apcupsd
 // client using the input ClientFunc.
-func New(fn ClientFunc) *Exporter {
+func New(fn ClientFunc, logger log.Logger) *Exporter {
 	return &Exporter{
 		clientFn: fn,
+		logger:   logger,
+		Up: prometheus.NewDesc(
+			prometheus.BuildFQName(namespace, "", "up"),
+			"The status of the collector.",
+			nil,
+			nil,
+		),
 	}
 }
 
@@ -53,6 +65,7 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 			c.Describe(ch)
 		}
 	})
+	ch <- e.Up
 }
 
 // Collect sends the collected metrics from each of the collectors to
@@ -66,10 +79,12 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	// This is a hack but it allows us to report failure to dial without
 	// reworking significant portions of the code.
 	if err != nil {
-		log.Println(err)
-		ch <- prometheus.NewInvalidMetric(NewUPSCollector(nil).Info, err)
+		ch <- prometheus.MustNewConstMetric(e.Up, prometheus.GaugeValue, 0)
+		level.Error(e.logger).Log("err", err)
+		// ch <- prometheus.NewInvalidMetric(NewUPSCollector(nil).Info, err)
 		return
 	}
+	ch <- prometheus.MustNewConstMetric(e.Up, prometheus.GaugeValue, 1)
 }
 
 // withCollectors sets up an apcupsd client and creates a set of prometheus
