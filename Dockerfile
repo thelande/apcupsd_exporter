@@ -17,7 +17,7 @@ LABEL maintainer="Tom Helander <thomas.helander@gmail.com>"
 
 WORKDIR /app
 
-COPY --from=builder /src/apcupsd_exporter .
+COPY --from=builder /src/output/apcupsd_exporter .
 
 EXPOSE 9810
 
