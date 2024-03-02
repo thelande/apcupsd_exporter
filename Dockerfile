@@ -19,6 +19,6 @@ WORKDIR /app
 
 COPY --from=builder --chmod=0755 /src/output/apcupsd_exporter .
 
-EXPOSE 9810
+EXPOSE 9162
 
 ENTRYPOINT ["/app/apcupsd_exporter"]
