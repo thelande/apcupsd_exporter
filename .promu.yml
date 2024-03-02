@@ -7,6 +7,7 @@ build:
   prefix: .
   binaries:
     - name: apcupsd_exporter
+      path: ./cmd/apcupsd_exporter
   flags: -a -tags 'netgo osusergo static_build'
   ldflags: |
     -s
