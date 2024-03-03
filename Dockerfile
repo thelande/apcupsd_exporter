@@ -1,7 +1,15 @@
 FROM --platform=${BUILDPLATFORM} golang:1.21-alpine AS builder
 LABEL maintainer="Tom Helander <thomas.helander@gmail.com>"
 
-RUN apk add make curl git
+RUN set -eux; \
+	apk update; \
+	apk upgrade --no-cache; \
+	apk add --no-cache \
+		curl \
+		git \
+		make \
+	; \
+	apk cache purge
 
 WORKDIR /src
 COPY go.mod go.sum ./
