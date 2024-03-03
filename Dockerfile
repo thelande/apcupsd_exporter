@@ -1,15 +1,7 @@
 FROM --platform=${BUILDPLATFORM} golang:1.21-alpine AS builder
 LABEL maintainer="Tom Helander <thomas.helander@gmail.com>"
 
-RUN set -eux; \
-	apk update; \
-	apk upgrade --no-cache; \
-	apk add --no-cache \
-		curl \
-		git \
-		make \
-	; \
-	apk cache purge
+RUN apk add make curl git
 
 WORKDIR /src
 COPY go.mod go.sum ./
@@ -24,6 +16,10 @@ FROM alpine:3.18.4
 LABEL maintainer="Tom Helander <thomas.helander@gmail.com>"
 
 WORKDIR /app
+RUN set -eux; \
+    apk update; \
+    apk upgrade -v; \
+    apk cache purge
 
 COPY --from=builder --chmod=0755 /src/output/apcupsd_exporter .
 
